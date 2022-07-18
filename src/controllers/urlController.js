@@ -4,4 +4,4 @@ const createUrl = async function(req, res){
 
 }
 
-module.exports={createUrl}
+module.exports = {createUrl}
