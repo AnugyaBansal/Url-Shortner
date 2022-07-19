@@ -12,7 +12,7 @@ const createUrl = async function (req, res) {
             return res.status(400).send({ status: false, message: "Body is empty please provide data " })
         }
         if (!data.longUrl || !validator.isValid(data.longUrl)) {
-            return res.status(400).send({ status: false, message: "long url is required" })
+            return res.status(400).send({ status: false, message: "Not a valid URL format. Please provide long url." })
         }
         if (!url.isURL(data.longUrl)) {
             return res.status(400).send({ status: false, msg: "Please Provide correct input for url" })
@@ -49,8 +49,10 @@ const createUrl = async function (req, res) {
 const getUrl = async function (req, res) {
     try {
         const urlCode = req.params.urlCode
-        if (!validator.isValid(urlCode)) {
-            return res.status(400).send({ status: false, message: "Url Code is not valid" })
+        
+
+        if (!shortId.isValid(urlCode)) {
+            return res.status(400).send({ status: false, message: "Url Code is not valid Code. Please provide correct input" })
         }
 
         const data = await urlModel.findOne({ urlCode: urlCode })
