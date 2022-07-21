@@ -43,7 +43,7 @@ const createUrl = async function (req, res) {
         //------------ validation of Long URL
 
         if (!url.isURL(data.longUrl)) {
-            return res.status(400).send({ status: false, msg: "Please Provide correct input for url" })
+            return res.status(400).send({ status: false, message: "Please Provide correct input for url" })
         }
 
         //------------ Checking for duplicate longURL in DB
@@ -100,7 +100,7 @@ const getUrl = async function (req, res) {
         if (err.message) {
             return res.status(404).send({ status: false, message: "URL Not found" })
         }
-        return res.status(500).send({ status: false, message: err })
+        return res.status(500).send({ status: false, message: err.message })
     }
 }
 
