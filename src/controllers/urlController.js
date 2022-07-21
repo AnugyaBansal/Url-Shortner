@@ -3,12 +3,12 @@ const validator = require('../validation/validation')
 const shortId = require('shortid')
 const url = require("validator")
 const redis = require("redis");
-const { promisify } = require("util");  
+const { promisify } = require("util");
 
 
 // Connect to Redis 
 
-const redisClient = redis.createClient(                             
+const redisClient = redis.createClient(
     11946,                                                          // port no
     "redis-11946.c301.ap-south-1-1.ec2.cloud.redislabs.com",        //endpoint
     { no_ready_check: true }
@@ -49,6 +49,7 @@ const createUrl = async function (req, res) {
         //------------ Checking for duplicate longURL in DB
         let duplicateUrl = await urlModel.findOne({ longUrl: data.longUrl }).select({ urlCode: 1, longUrl: 1, shortUrl: 1, _id: 0 })
         if (duplicateUrl) {
+           // await SET_ASYNC(`${data.longUrl}`, (duplicateUrl.longUrl))
             return res.status(200).send({ status: true, data: duplicateUrl })
         }
 
@@ -59,8 +60,9 @@ const createUrl = async function (req, res) {
         data.urlCode = urlCode
         data.shortUrl = shortUrl
 
-        let savedData = await urlModel.create(data)     
-        
+        let savedData = await urlModel.create(data)
+        //await SET_ASYNC(`${savedData.urlCode}`, (savedData.longUrl))        // SET key and value using SET datatype in cache
+
         return res.status(201).send({
             status: true, data: {
                 longUrl: savedData.longUrl,
@@ -76,9 +78,11 @@ const createUrl = async function (req, res) {
 
 
 // ----------------------------------------------- GET URL --------------------------------------------------
+
 const getUrl = async function (req, res) {
     try {
         const urlCode = req.params.urlCode      // Getting data from params
+        
 
         if (!shortId.isValid(urlCode)) {
             return res.status(400).send({ status: false, message: "Url Code is not valid Code. Please provide correct input" })
@@ -89,17 +93,27 @@ const getUrl = async function (req, res) {
             return res.status(302).redirect(cachedUrlCode)
         } else {
             const cachedData = await urlModel.findOne({ urlCode: urlCode })
-            if (cachedData) {
-                await SET_ASYNC(`${req.params.urlCode}`, (cachedData.longUrl))   // SET key and value using SET datatype in cache
-                return res.status(302).redirect(cachedData.longUrl)
-            } else {
-                return res.status(404).send({ status: false, message: "URL Code does not exist" })
-            }
-
+            await SET_ASYNC(`${req.params.urlCode}`, (cachedData.longUrl))   // SET key and value using SET datatype in cache
+            return res.status(302).redirect(cachedData.longUrl)
         }
     } catch (err) {
+        if (err.message) {
+            return res.status(404).send({ status: false, message: "URL Not found" })
+        }
         return res.status(500).send({ status: false, message: err })
     }
 }
 
+// const flushw = (req, res) => {
+//     redisClient.flushall("ASYNC", (err, savedData) => {
+//     if (err)
+//     console.log(err)
+//     else if (savedData)
+//     console.log("Memory flushed: ", savedData)
+//     })
+//     res.status(200).send({ msg: "redis memery cleared" })
+// }
+
 module.exports = { createUrl, getUrl }
+
+
