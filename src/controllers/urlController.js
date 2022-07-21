@@ -59,8 +59,7 @@ const createUrl = async function (req, res) {
         data.urlCode = urlCode
         data.shortUrl = shortUrl
 
-        let savedData = await urlModel.create(data)
-        await SET_ASYNC(`${savedData.urlCode}`, (savedData.longUrl))        // SET key and value using SET datatype in cache
+        let savedData = await urlModel.create(data)     
         
         return res.status(201).send({
             status: true, data: {
@@ -80,23 +79,26 @@ const createUrl = async function (req, res) {
 const getUrl = async function (req, res) {
     try {
         const urlCode = req.params.urlCode      // Getting data from params
-        
+
         if (!shortId.isValid(urlCode)) {
             return res.status(400).send({ status: false, message: "Url Code is not valid Code. Please provide correct input" })
         }
 
         let cachedUrlCode = await GET_ASYNC(`${req.params.urlCode}`)        // Getting value of urlcode and storing it in cacheUrlCode
-              
         if (cachedUrlCode) {
             return res.status(302).redirect(cachedUrlCode)
         } else {
-            const data = await urlModel.findOne({ urlCode: urlCode })
-            if (!data) {
+            const cachedData = await urlModel.findOne({ urlCode: urlCode })
+            if (cachedData) {
+                await SET_ASYNC(`${req.params.urlCode}`, (cachedData.longUrl))   // SET key and value using SET datatype in cache
+                return res.status(302).redirect(cachedData.longUrl)
+            } else {
                 return res.status(404).send({ status: false, message: "URL Code does not exist" })
             }
+
         }
     } catch (err) {
-        return res.status(500).send({ status: false, message: err.message })
+        return res.status(500).send({ status: false, message: err })
     }
 }
 
