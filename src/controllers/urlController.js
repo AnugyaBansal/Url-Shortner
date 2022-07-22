@@ -49,7 +49,7 @@ const createUrl = async function (req, res) {
         //------------ Checking for duplicate longURL in DB
         let duplicateUrl = await urlModel.findOne({ longUrl: data.longUrl }).select({ urlCode: 1, longUrl: 1, shortUrl: 1, _id: 0 })
         if (duplicateUrl) {
-           // await SET_ASYNC(`${data.longUrl}`, (duplicateUrl.longUrl))
+            // await SET_ASYNC(`${data.longUrl}`, (duplicateUrl.longUrl))
             return res.status(200).send({ status: true, data: duplicateUrl })
         }
 
@@ -82,7 +82,7 @@ const createUrl = async function (req, res) {
 const getUrl = async function (req, res) {
     try {
         const urlCode = req.params.urlCode      // Getting data from params
-        
+
 
         if (!shortId.isValid(urlCode)) {
             return res.status(400).send({ status: false, message: "Url Code is not valid Code. Please provide correct input" })
